@@ -702,6 +702,26 @@ exercise.forEach(function(exerciseMode) {
         assert.equal(r.type, 'error')
       })
 
+      test('json creates json Response with ResponseInit', function() {
+        var r = Response.json({key: "value"}, {
+          headers: new Headers('header', 'value'),
+          status: 404,
+          statusText: "NOT FOUND"
+        })
+        assert(r instanceof Response)
+        assert.equal(r.headers.get('content-type'), 'application/json')
+        assert.equal(r.status, 404)
+        assert.equal(r.statusText, "NOT FOUND")
+      })
+
+      test('json creates json Response without ResponseInit', function() {
+        var r = Response.json({key: "value"})
+        assert(r instanceof Response)
+        assert.equal(r.headers.get('content-type'), 'application/json')
+        assert.equal(r.status, 200)
+        assert.equal(r.statusText, '')
+      })
+
       test('redirect creates redirect Response', function() {
         var r = Response.redirect('https://fetch.spec.whatwg.org/', 301)
         assert(r instanceof Response)

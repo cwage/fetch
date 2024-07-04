@@ -499,6 +499,19 @@ Response.error = function() {
   return response
 }
 
+Response.json = function(data, options) {
+  var responseInit = options ? {
+    headers: new Headers(options.headers),
+    status: options.status,
+    statusText: options.statusText
+  } : {
+    headers: new Headers()
+  }
+  responseInit.headers.set("content-type", "application/json")
+
+  return new Response(JSON.stringify(data), responseInit)
+}
+
 var redirectStatuses = [301, 302, 303, 307, 308]
 
 Response.redirect = function(url, status) {
