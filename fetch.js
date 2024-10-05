@@ -551,8 +551,10 @@ export function fetch(input, init) {
       }
       options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL')
       var body = 'response' in xhr ? xhr.response : xhr.responseText
-      setTimeout(function() {
-        resolve(new Response(body, options))
+      setTimeout(function () {
+        try {
+          resolve(new Response(body, options))
+        } catch (e) { reject(e) }
       }, 0)
     }
 
