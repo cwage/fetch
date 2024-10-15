@@ -337,6 +337,28 @@ exercise.forEach(function(exerciseMode) {
         assert.deepEqual({done: false, value: ['content-type', 'text/html']}, iterator.next())
         assert.deepEqual({done: true, value: undefined}, iterator.next())
       })
+      test('getSetCookie', function() {
+        var headers = new Headers();
+
+        headers.append("Set-Cookie", "x=x");
+        headers.append("Set-Cookie", "y=y");
+
+        assert.equal(headers.get("Set-Cookie"), "x=x, y=y");
+
+        var forEach = []
+        headers.forEach(function(value, key) {
+          forEach.push({value: value, key: key})
+        })
+
+        assert.equal(forEach.length, 2)
+        assert.deepEqual({key: 'set-cookie', value: 'x=x'}, forEach[0])
+        assert.deepEqual({key: 'set-cookie', value: 'y=y'}, forEach[1])
+
+        var getSetCookie = headers.getSetCookie();
+        assert.equal(getSetCookie.length, 2);
+        assert.equal(getSetCookie[0], "x=x");
+        assert.equal(getSetCookie[1], "y=y");
+      })
     })
 
     // https://fetch.spec.whatwg.org/#request-class

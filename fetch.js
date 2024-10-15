@@ -107,8 +107,11 @@ export function Headers(headers) {
 Headers.prototype.append = function(name, value) {
   name = normalizeName(name)
   value = normalizeValue(value)
-  var oldValue = this.map[name]
-  this.map[name] = oldValue ? oldValue + ', ' + value : value
+  if (this.has(name)) {
+    this.map[name].push(value)
+  } else {
+    this.map[name] = [value]
+  }
 }
 
 Headers.prototype['delete'] = function(name) {
@@ -117,7 +120,7 @@ Headers.prototype['delete'] = function(name) {
 
 Headers.prototype.get = function(name) {
   name = normalizeName(name)
-  return this.has(name) ? this.map[name] : null
+  return this.has(name) ? this.map[name].join(', ') : null
 }
 
 Headers.prototype.has = function(name) {
@@ -125,13 +128,19 @@ Headers.prototype.has = function(name) {
 }
 
 Headers.prototype.set = function(name, value) {
-  this.map[normalizeName(name)] = normalizeValue(value)
+  this.map[normalizeName(name)] = [normalizeValue(value)]
 }
 
 Headers.prototype.forEach = function(callback, thisArg) {
   for (var name in this.map) {
     if (this.map.hasOwnProperty(name)) {
-      callback.call(thisArg, this.map[name], name, this)
+      if (name === 'set-cookie') {
+        for (var index in this.map[name]) {
+          callback.call(thisArg, this.map[name][index], name, this)
+        }
+      } else {
+        callback.call(thisArg, this.map[name].join(', '), name, this)
+      }
     }
   }
 }
@@ -158,6 +167,16 @@ Headers.prototype.entries = function() {
     items.push([name, value])
   })
   return iteratorFor(items)
+}
+
+Headers.prototype.getSetCookie = function() {
+  var items = []
+  if (this.has('set-cookie')) {
+    for (var index in this.map['set-cookie']) {
+      items.push(this.map['set-cookie'][index])
+    }
+  }
+  return items
 }
 
 if (support.iterable) {
