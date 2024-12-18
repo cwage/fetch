@@ -558,13 +558,13 @@ export function fetch(input, init) {
 
     xhr.onerror = function() {
       setTimeout(function() {
-        reject(new TypeError('Network request failed'))
+        reject(new TypeError('Network request ('+request.method+' '+request.url+') failed'))
       }, 0)
     }
 
     xhr.ontimeout = function() {
       setTimeout(function() {
-        reject(new TypeError('Network request timed out'))
+        reject(new TypeError('Network request ('+request.method+' '+request.url+') timed out'))
       }, 0)
     }
 
