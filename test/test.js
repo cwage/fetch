@@ -1238,6 +1238,49 @@ exercise.forEach(function(exerciseMode) {
           )
         })
 
+        test('initially timed-out signal', function() {
+          var signal = AbortSignal.timeout(0)
+          var sleep = new Promise((resolve) => {
+            setTimeout(function() {
+              resolve()
+            }, 10)
+          })
+
+          return sleep.then(function() {
+            return fetch('/request', {signal})
+          }).then(
+            function() {
+              assert.ok(false)
+            },
+            function(error) {
+              if (!IEorEdge) assert.instanceOf(error, WHATWGFetch.DOMException)
+              assert.equal(error.name, 'TimeoutError')
+            }
+          )
+        })
+
+        test('initially timed-out signal within Request', function() {
+          var signal = AbortSignal.timeout(0)
+          var sleep = new Promise((resolve) => {
+            setTimeout(function() {
+              resolve()
+            }, 10)
+          })
+
+          return sleep.then(function() {
+            var request = new Request('/request', {signal})
+            return fetch(request)
+          }).then(
+            function() {
+              assert.ok(false)
+            },
+            function(error) {
+              if (!IEorEdge) assert.instanceOf(error, WHATWGFetch.DOMException)
+              assert.equal(error.name, 'TimeoutError')
+            }
+          )
+        })
+
         test('mid-request', function() {
           var controller = new AbortController()
 
@@ -1271,6 +1314,82 @@ exercise.forEach(function(exerciseMode) {
             },
             function(error) {
               assert.equal(error.name, 'AbortError')
+            }
+          )
+        })
+
+        test('mid-request with custom abort reason', function() {
+          var controller = new AbortController()
+
+          setTimeout(function() {
+            controller.abort('CustomReason')
+          }, 30)
+
+          return fetch('/slow?_=' + new Date().getTime(), {
+            signal: controller.signal
+          }).then(
+            function() {
+              assert.ok(false)
+            },
+            function(error) {
+              // https://bugs.webkit.org/show_bug.cgi?id=246069
+              if (Safari && exerciseMode === 'native') {
+                assert.equal(error.name, 'AbortError')
+              } else {
+                assert.equal(error, 'CustomReason')
+              }
+            }
+          )
+        })
+
+        test('mid-request with custom abort reason within Request', function() {
+          var controller = new AbortController()
+          var request = new Request('/slow?_=' + new Date().getTime(), {signal: controller.signal})
+
+          setTimeout(function() {
+            controller.abort('CustomReason')
+          }, 30)
+
+          return fetch(request).then(
+            function() {
+              assert.ok(false)
+            },
+            function(error) {
+              // https://bugs.webkit.org/show_bug.cgi?id=246069
+              if (Safari && exerciseMode === 'native') {
+                assert.equal(error.name, 'AbortError')
+              } else {
+                assert.equal(error, 'CustomReason')
+              }
+            }
+          )
+        })
+
+        test('mid-request timeout', function() {
+          return fetch('/slow?_=' + new Date().getTime(), {
+            signal: AbortSignal.timeout(30)
+          }).then(
+            function() {
+              assert.ok(false)
+            },
+            function(error) {
+              // https://bugs.webkit.org/show_bug.cgi?id=246069
+              const expected = (Safari && exerciseMode === 'native') ? 'AbortError' : 'TimeoutError'
+              assert.equal(error.name, expected)
+            }
+          )
+        })
+
+        test('mid-request timeout within Request', function() {
+          var request = new Request('/slow?_=' + new Date().getTime(), {signal: AbortSignal.timeout(30)})
+          return fetch(request).then(
+            function() {
+              assert.ok(false)
+            },
+            function(error) {
+              // https://bugs.webkit.org/show_bug.cgi?id=246069
+              const expected = (Safari && exerciseMode === 'native') ? 'AbortError' : 'TimeoutError'
+              assert.equal(error.name, expected)
             }
           )
         })

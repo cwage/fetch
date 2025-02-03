@@ -528,6 +528,9 @@ export function fetch(input, init) {
     var request = new Request(input, init)
 
     if (request.signal && request.signal.aborted) {
+      if (request.signal.throwIfAborted) {
+        request.signal.throwIfAborted()
+      }
       return reject(new DOMException('Aborted', 'AbortError'))
     }
 
@@ -570,7 +573,15 @@ export function fetch(input, init) {
 
     xhr.onabort = function() {
       setTimeout(function() {
-        reject(new DOMException('Aborted', 'AbortError'))
+        if (request.signal && request.signal.aborted && request.signal.throwIfAborted) {
+          try {
+            request.signal.throwIfAborted()
+          } catch (e) {
+            reject(e)
+          }
+        } else {
+          reject(new DOMException('Aborted', 'AbortError'))
+        }
       }, 0)
     }
 
